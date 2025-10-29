@@ -62,7 +62,7 @@ export class AuthService {
 
     async signin(dto: SigninDTO) {
         const user = await this.userRepository.findOne({
-            where: { username: dto.username },
+            where: { email: dto.email },
             select: ['idx', 'password']
         });
         if (!user) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
