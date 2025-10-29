@@ -25,12 +25,8 @@ export class UserService {
 
         const isVerifiedEmail = await this.verifyCodeRepository.findOne({ where: { email: dto.email }});
 
-        if (!isVerifiedEmail || !isVerifiedEmail.verified) {
+        if (!isVerifiedEmail || !isVerifiedEmail.isVerified) {
             throw new BadRequestException('이메일을 인증해 주세요.');
-        }
-
-        if (dto.password != dto.confirmPassword) {
-            throw new BadRequestException('비밀번호가 일치하지 않습니다.');
         }
 
         const hashedPassword = await bcrypt.hash(dto.password, 10);
