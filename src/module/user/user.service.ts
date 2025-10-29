@@ -16,7 +16,7 @@ export class UserService {
     ) {}
 
     async signup(dto: SignupDTO) {
-        const existId = await this.userRepository.findOne({ where: { user_id: dto.user_id }});
+        const existId = await this.userRepository.findOne({ where: { username: dto.username }});
         const existEmail = await this.userRepository.findOne({ where: { email: dto.email }});
 
         if (existId != null || existEmail != null) {
@@ -36,7 +36,7 @@ export class UserService {
         const hashedPassword = await bcrypt.hash(dto.password, 10);
 
         const user = this.userRepository.create({
-            user_id: dto.user_id,
+            username: dto.username,
             password: hashedPassword,
             email: dto.email,
             gender: dto.gender,

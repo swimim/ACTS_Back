@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -70,7 +70,7 @@ export class AuthService {
     }
 
     async signin(dto: SigninDTO) {
-        const user = await this.userRepository.findOne({ where: { user_id: dto.user_id } });
+        const user = await this.userRepository.findOne({ where: { username: dto.username } });
 
         if (user == null) {
             throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");

@@ -1,4 +1,4 @@
-import { IsDate, IsEmail, IsNotEmpty, IsString, IsStrongPassword, MaxLength, MinLength } from "class-validator"
+import { IsDate, IsEmail, IsNotEmpty, IsString, IsStrongPassword, MaxLength } from "class-validator"
 import { gender } from "../enum/gender.enum"
 import { Timestamp } from "typeorm"
 import { Type } from "class-transformer"
@@ -6,9 +6,8 @@ import { Type } from "class-transformer"
 export class SignupDTO {
     @IsNotEmpty()
     @IsString()
-    @MinLength(5, { message: '아이디는 5자 이상이어야 합니다.' })
-    @MaxLength(16, { message: '아이디는 16자 이하여야 합니다,' })
-    user_id: string
+    @MaxLength(10, { message: '아이디는 10자 이하여야 합니다.' })
+    username: string
 
     @IsNotEmpty()
     @IsString()
