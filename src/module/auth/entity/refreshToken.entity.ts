@@ -5,7 +5,7 @@ export class refreshToken {
     @PrimaryGeneratedColumn()
     idx: number
 
-    @Column({ nullable: false, length: '255' })
+    @Column({ nullable: false, type: 'varchar' })
     refreshToken: string
 
     @Column({ type: 'timestamp', nullable: false })

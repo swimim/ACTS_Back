@@ -6,16 +6,16 @@ export class user {
   @PrimaryGeneratedColumn()
   idx: number;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false, type: 'varchar', length: 10, unique: true })
   username: string;
 
-  @Column({ nullable: false })
+  @Column({ nullable: false, type: 'char', length: 60 })
   password: string;
 
-  @Column({ nullable: false, unique: true })
+  @Column({ nullable: false, type:'varchar', unique: true })
   email: string;
 
-  @Column({ type: 'enum', enum: gender, nullable: false })
+  @Column({ nullable: false, type: 'enum', enum: gender })
   gender: gender;
   
   @Column({ type: 'timestamp', nullable: false })

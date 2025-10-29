@@ -20,8 +20,6 @@ export class SignupDTO {
     }, { message: '비밀번호는 7자 이상이어야 하며, 1개 이상의 숫자, 특수문자, 대문자를 포함해야 합니다.' })
     password: string
 
-    confirmPassword: string
-
     @IsNotEmpty()
     @IsString()
     @IsEmail()

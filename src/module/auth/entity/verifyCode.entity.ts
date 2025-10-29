@@ -11,9 +11,9 @@ export class verify_code {
   @Column({ type: 'varchar', length: 6 })
   code: string
 
-  @Column({ type: 'timestamp' })
-  createdAt: Date
+  @Column({ type: 'timestamp', name: 'expires_at' })
+  expiresAt: Date
 
-  @Column({ type: 'boolean', default: false })
-  verified: boolean
+  @Column({ type: 'boolean', name:'is_verified', default: false })
+  isVerified: boolean
 }

@@ -1,17 +1,25 @@
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-jwt';
 import { Request } from 'express';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtRefreshStretagy extends PassportStrategy(Strategy, 'jwt-refresh') {
-  constructor() {
+  constructor(
+    private readonly configService: ConfigService
+  ) {
+    const secret = configService.get<string>('TOKEN_SECRET');
+    if (!secret) {
+      throw new InternalServerErrorException('TOKEN_SECRET is undefined.');
+    }
+
     super({
       jwtFromRequest: (req: Request) => {
-        const token = req?.cookies?.['refreshToken'];
-        return token;
+        const refreshToken = req?.cookies?.['refreshToken'];
+        return refreshToken;
       },
-      secretOrKey: process.env.TOKEN_SECRET,
+      secretOrKey: secret,
       passReqToCallback: true,
     });
   }
@@ -19,7 +27,7 @@ export class JwtRefreshStretagy extends PassportStrategy(Strategy, 'jwt-refresh'
   validate(req: Request, payload: any) {
     const refreshToken = req.cookies?.['refreshToken'];
     if (!refreshToken) {
-      throw new UnauthorizedException('Refresh token not found in cookies');
+      throw new UnauthorizedException('토큰을 찾을 수 없습니다.');
     }
 
     return { userId: payload.sub, refreshToken };

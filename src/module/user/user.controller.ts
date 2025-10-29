@@ -9,7 +9,6 @@ export class UserController {
     ) {}
 
     @Post('signup')
-    @HttpCode(201)
     signup(@Body() dto: SignupDTO) {
         return this.userService.signup(dto);
     }

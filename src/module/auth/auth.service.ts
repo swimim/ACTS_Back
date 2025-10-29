@@ -25,72 +25,58 @@ export class AuthService {
     ) {}
 
     async sendCode(dto: SendVerifyCodeDTO) {
-        await this.verifyCodeRepository.delete({ email: dto.email });
-        const newCode = Math.floor(100000 + Math.random() * 900000).toString();
-
-        const code = this.verifyCodeRepository.create({
-            email: dto.email,
-            code: newCode,
-            createdAt: new Date()
-        });
+        const code = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
+        
+        const verifyCode = this.verifyCodeRepository.create({ email: dto.email, code, expiresAt });
 
         await this.mailerService.sendMail({
             to: dto.email,
             subject: "[회원가입] 5분 내로 이메일 인증을 완료해 주세요.",
-            text: `인증코드: ${newCode}`
+            text: `인증코드: ${code}`
         })
 
-        await this.verifyCodeRepository.save(code);
+        await this.verifyCodeRepository.upsert(verifyCode, ['email']);
     }
 
     async verifyCode(dto: VerifyCodeDTO) {
-        const existCode = await this.verifyCodeRepository.findOne({ where: { email: dto.email }});
+        const existingCode = await this.verifyCodeRepository.findOne({
+            where: { email: dto.email },
+            select: ['isVerified', 'code', 'expiresAt']
+        });
 
-        if (existCode == null) {
-            throw new BadRequestException("인증코드를 먼저 발송해주세요.");
-        }
+        if (!existingCode) throw new BadRequestException("인증코드를 먼저 발송해주세요.");
+        if (existingCode.isVerified) throw new BadRequestException("이미 인증되었습니다.");
 
-        if (existCode.verified) {
-            throw new BadRequestException("이미 인증되었습니다.");
-        }
-
-        const expireTime = new Date();
-        expireTime.setMinutes(existCode.createdAt.getMinutes() + 5);
-
-        if (new Date() > expireTime) {
+        if (Date.now() > existingCode.expiresAt.getTime()) {
             throw new BadRequestException("인증 시간이 만료되었습니다.");
         }
 
-        if (existCode.code != dto.code) {
+        if (existingCode.code != dto.code) {
             throw new BadRequestException("인증코드가 일치하지 않습니다.");
         }
 
-        existCode.verified = true;
-        await this.verifyCodeRepository.save(existCode);
+        existingCode.isVerified = true;
+        await this.verifyCodeRepository.save(existingCode);
     }
 
     async signin(dto: SigninDTO) {
-        const user = await this.userRepository.findOne({ where: { username: dto.username } });
-
-        if (user == null) {
-            throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
-        }
+        const user = await this.userRepository.findOne({
+            where: { username: dto.username },
+            select: ['idx', 'password']
+        });
+        if (!user) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
 
         const isMatch = await bcrypt.compare(dto.password, user.password);
-
-        if (!isMatch) {
-            throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
-        }
+        if (!isMatch) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
 
         const payload = { sub: user.idx };
+        const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
 
         const accessToken = await this.jwtService.signAsync(payload);
         const refreshToken = await this.jwtService.signAsync(payload, {
             expiresIn: '14d'
         });
-
-        const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 14);
 
         await this.refreshTokenRepository.save({ refreshToken, expiresAt });
 
@@ -98,9 +84,7 @@ export class AuthService {
     }
 
     async refreshAccessToken(userId: number) {
-        const accessToken = await this.jwtService.signAsync({ sub: userId });
-
-        return { accessToken};
+        return await this.jwtService.signAsync({ sub: userId });
     }
 
     async logout(refreshToken: string) {
