@@ -20,6 +20,7 @@ import { JwtRefreshStretagy } from './strategy/jwt-refresh.strategy';
           transport: {
             host: 'smtp.gmail.com',
             port: 587,
+            secure: false,
             auth: {
               user: configService.get('MAIL_USER'),
               pass: configService.get('MAIL_PASS'),

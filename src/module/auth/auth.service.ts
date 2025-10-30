@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,6 +24,17 @@ export class AuthService {
         private readonly jwtService: JwtService
     ) {}
 
+    async validateToken(refreshToken: string) {
+        const existingToken = await this.refreshTokenRepository.findOneBy({ refreshToken });
+        
+        if (!existingToken) throw new UnauthorizedException('토큰을 찾을 수 없습니다.');
+
+        if (Date.now() > existingToken.expiresAt.getTime()) {
+            await this.refreshTokenRepository.delete(existingToken);
+            throw new UnauthorizedException('토큰이 만료되었습니다.');
+        }
+    }
+
     async sendCode(dto: SendVerifyCodeDTO) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
@@ -40,10 +51,7 @@ export class AuthService {
     }
 
     async verifyCode(dto: VerifyCodeDTO) {
-        const existingCode = await this.verifyCodeRepository.findOne({
-            where: { email: dto.email },
-            select: ['isVerified', 'code', 'expiresAt']
-        });
+        const existingCode = await this.verifyCodeRepository.findOne({ where: { email: dto.email } });
 
         if (!existingCode) throw new BadRequestException("인증코드를 먼저 발송해주세요.");
         if (existingCode.isVerified) throw new BadRequestException("이미 인증되었습니다.");
@@ -56,8 +64,9 @@ export class AuthService {
             throw new BadRequestException("인증코드가 일치하지 않습니다.");
         }
 
-        existingCode.isVerified = true;
-        await this.verifyCodeRepository.save(existingCode);
+        await this.verifyCodeRepository.update(existingCode, {
+            isVerified: true
+        });
     }
 
     async signin(dto: SigninDTO) {
