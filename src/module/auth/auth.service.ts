@@ -72,7 +72,7 @@ export class AuthService {
     async signin(dto: SigninDTO) {
         const user = await this.userRepository.findOne({
             where: { email: dto.email },
-            select: ['idx', 'password']
+            select: ['idx', 'password', 'username']
         });
         if (!user) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
 
@@ -86,10 +86,11 @@ export class AuthService {
         const refreshToken = await this.jwtService.signAsync(payload, {
             expiresIn: '14d'
         });
+        const username = user.username;
 
         await this.refreshTokenRepository.save({ refreshToken, expiresAt });
 
-        return { accessToken, refreshToken };
+        return { accessToken, refreshToken, username };
     }
 
     async refreshAccessToken(userId: number) {
