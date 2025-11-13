@@ -8,11 +8,13 @@ import { GetUser } from 'src/common/decorators/getUser.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { ProviderEnum } from '../user/enum/provider.enum';
 import { naver } from './guard/naver-auth.guard';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
     constructor(
-        private readonly authService: AuthService
+        private readonly authService: AuthService,
+        private readonly configService: ConfigService
     ) { }
 
     @Post('/send-code')
@@ -59,7 +61,7 @@ export class AuthController {
             ProviderEnum.KAKAO
         );
 
-        return res.redirect(`http://localhost:5173/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+        return res.redirect(`${this.configService.get('FRONTEND_URL') ?? 'localhost:5173'}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }
 
     @Get('/oauth/google')
@@ -78,7 +80,7 @@ export class AuthController {
             req.user.birth
         )
 
-        return res.redirect(`http://localhost:5173/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+        return res.redirect(`${this.configService.get('FRONTEND_URL') ?? 'localhost:5173'}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }
 
     @Get('/oauth/naver')
@@ -96,6 +98,6 @@ export class AuthController {
             req.user.birth
         )
 
-        return res.redirect(`http://localhost:5173/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+        return res.redirect(`${this.configService.get('FRONTEND_URL') ?? 'localhost:5173'}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }
 }
