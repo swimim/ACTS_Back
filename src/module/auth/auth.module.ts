@@ -11,6 +11,7 @@ import { refreshToken } from './entity/refreshToken.entity';
 import { PassportModule } from '@nestjs/passport';
 import { JwtRefreshStretagy } from './strategy/jwt-refresh.strategy';
 import { KakaoStrategy } from './strategy/kakao-oauth.strategy';
+import { GoogleStrategy } from './strategy/google-oauth.strategy';
 
 @Module({
   imports: [
@@ -44,6 +45,6 @@ import { KakaoStrategy } from './strategy/kakao-oauth.strategy';
       PassportModule
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtRefreshStretagy, KakaoStrategy]
+  providers: [AuthService, JwtRefreshStretagy, KakaoStrategy, GoogleStrategy]
 })
 export class AuthModule {}

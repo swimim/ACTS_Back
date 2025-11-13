@@ -6,6 +6,7 @@ import { SigninDTO } from './dto/signin.dto';
 import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { ProviderEnum } from '../user/enum/provider.enum';
 
 @Controller('auth')
 export class AuthController {
@@ -46,16 +47,35 @@ export class AuthController {
     @Get('/oauth/kakao')
     @UseGuards(AuthGuard('kakao'))
     @HttpCode(301)
-    async kakaoLogin() {
-    }
+    async kakaoLogin() { }
 
-    @Get('/oauth/kakao/callback') 
+    @Get('/oauth/kakao/callback')
     @UseGuards(AuthGuard('kakao'))
     async kakaoCallback(@Req() req: any, @Res() res: any) {
-        const result = await this.authService.kakaoOauthSignIn(
+        const result = await this.authService.OAuthSignIn(
             req.user.kakaoId,
-            req.user.profileNickname
+            req.user.profileNickname,
+            ProviderEnum.KAKAO
         );
+
+        return res.redirect(`http://localhost:5173/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+    }
+
+    @Get('/oauth/google')
+    @UseGuards(AuthGuard('google'))
+    @HttpCode(301)
+    async googleLogin() { }
+
+    @Get('/oauth/google/callback')
+    @UseGuards(AuthGuard('google'))
+    async googleCallback(@Req() req: any, @Res() res: any) {
+        const result = await this.authService.OAuthSignIn(
+            req.user.email,
+            req.user.username,
+            ProviderEnum.GOOGLE,
+            req.user.gender,
+            req.user.birth
+        )
 
         return res.redirect(`http://localhost:5173/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }

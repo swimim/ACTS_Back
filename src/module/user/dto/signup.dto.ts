@@ -1,7 +1,7 @@
 import { IsDate, IsEmail, IsNotEmpty, IsString, IsStrongPassword, MaxLength } from "class-validator"
-import { gender } from "../enum/gender.enum"
 import { Timestamp } from "typeorm"
 import { Type } from "class-transformer"
+import { GenderEnum } from "../enum/gender.enum"
 
 export class SignupDTO {
     @IsNotEmpty()
@@ -27,7 +27,7 @@ export class SignupDTO {
 
     @IsNotEmpty()
     @IsString()
-    gender: gender
+    gender: GenderEnum
 
     @Type(() => Date)
     @IsNotEmpty()

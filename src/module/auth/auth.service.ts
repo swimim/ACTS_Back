@@ -10,8 +10,8 @@ import { VerifyCodeDTO } from './dto/verifyCode.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SigninDTO } from './dto/signin.dto';
 import { refreshToken } from './entity/refreshToken.entity';
-import { gender } from '../user/enum/gender.enum';
 import { ProviderEnum } from '../user/enum/provider.enum';
+import { GenderEnum } from '../user/enum/gender.enum';
 
 @Injectable()
 export class AuthService {
@@ -103,7 +103,7 @@ export class AuthService {
         await this.refreshTokenRepository.delete({ refreshToken });
     }
 
-    async kakaoOauthSignIn(clientId: string, profileNickname: string) {
+    async OAuthSignIn(clientId: string, profileNickname: string, provider: ProviderEnum, gender?: GenderEnum, birth?: Date) {
         if (await this.userRepository.existsBy({ email: clientId })) {
             const user = await this.userRepository.findOne({
                 where: { email: clientId },
@@ -125,13 +125,17 @@ export class AuthService {
             return { accessToken, refreshToken, username };
         } else {
             // 존재하지 않는 경우
+            console.log()
             const user = await this.userRepository.create({
-                birth: new Date('2000-01-01T00:00:00Z'),// Temp
+                birth: birth ?? new Date('2000-01-01T00:00:00Z'),
                 email: clientId,
-                gender: gender.male,    // Temp
-                provider: ProviderEnum.KAKAO,
+                gender: gender ?? GenderEnum.male,
+                provider: provider,
                 username: profileNickname
             })
+
+            await this.userRepository.save(user);
+
             const payload = { sub: user.idx };
             const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
 

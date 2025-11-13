@@ -1,6 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
-import { gender } from "../enum/gender.enum";
 import { ProviderEnum } from "../enum/provider.enum";
+import { GenderEnum } from "../enum/gender.enum";
 
 @Entity()
 export class user {
@@ -16,8 +16,8 @@ export class user {
   @Column({ nullable: false, type:'varchar', unique: true })
   email: string;
 
-  @Column({ nullable: false, type: 'enum', enum: gender })
-  gender: gender;
+  @Column({ nullable: false, type: 'enum', enum: GenderEnum })
+  gender: GenderEnum;
   
   @Column({ type: 'timestamp', nullable: false })
   birth: Date;
