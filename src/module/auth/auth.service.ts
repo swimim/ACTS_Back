@@ -12,6 +12,7 @@ import { SigninDTO } from './dto/signin.dto';
 import { refreshToken } from './entity/refreshToken.entity';
 import { ProviderEnum } from '../user/enum/provider.enum';
 import { GenderEnum } from '../user/enum/gender.enum';
+import { SocialSignupDto } from './dto/socialSignup.dto';
 
 @Injectable()
 export class AuthService {
@@ -78,7 +79,7 @@ export class AuthService {
         });
         if (!user) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
 
-        const isMatch = await bcrypt.compare(dto.password, user.password);
+        const isMatch = await bcrypt.compare(dto.password, user.password!);
         if (!isMatch) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
 
         const payload = { sub: user.idx };
@@ -148,5 +149,21 @@ export class AuthService {
 
             return { accessToken, refreshToken, username: user.username };
         }
+    }
+
+    async validateUser(email: string) {
+        const user = await this.userRepository.findOne({ where: { email }});
+
+        return user;
+    }
+
+    async socialSignup(dto: SocialSignupDto) {
+        await this.userRepository.save({
+            username: dto.username,
+            password: null,
+            email: dto.email,
+            gender: dto.gender,
+            birth: dto.birth
+        });
     }
 }

@@ -7,6 +7,7 @@ import { JwtRefreshGuard } from './guard/jwt-refresh.guard';
 import { GetUser } from 'src/common/decorators/getUser.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { ProviderEnum } from '../user/enum/provider.enum';
+import { naver } from './guard/naver-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -73,6 +74,24 @@ export class AuthController {
             req.user.email,
             req.user.username,
             ProviderEnum.GOOGLE,
+            req.user.gender,
+            req.user.birth
+        )
+
+        return res.redirect(`http://localhost:5173/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+    }
+
+    @Get('/oauth/naver')
+    @UseGuards(naver)
+    async naverLogin() { }
+
+    @Get('/oauth/naver/callback')
+    @UseGuards(naver)
+    async naverCallback(@Req() req: any, @Res() res: any) {
+        const result = await this.authService.OAuthSignIn(
+            req.user.email,
+            req.user.username,
+            ProviderEnum.NAVER,
             req.user.gender,
             req.user.birth
         )
