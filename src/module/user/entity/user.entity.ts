@@ -1,5 +1,6 @@
 import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
 import { gender } from "../enum/gender.enum";
+import { ProviderEnum } from "../enum/provider.enum";
 
 @Entity()
 export class user {
@@ -9,9 +10,9 @@ export class user {
   @Column({ nullable: false, type: 'varchar', length: 10, unique: true })
   username: string;
 
-  @Column({ nullable: false, type: 'char', length: 60 })
+  @Column({ nullable: true, type: 'char', length: 60 })
   password: string;
-
+ 
   @Column({ nullable: false, type:'varchar', unique: true })
   email: string;
 
@@ -20,4 +21,7 @@ export class user {
   
   @Column({ type: 'timestamp', nullable: false })
   birth: Date;
+
+  @Column({ nullable: false, default: ProviderEnum.NATIVE })
+  provider: ProviderEnum;
 }

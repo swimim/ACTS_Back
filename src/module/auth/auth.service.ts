@@ -10,6 +10,8 @@ import { VerifyCodeDTO } from './dto/verifyCode.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { SigninDTO } from './dto/signin.dto';
 import { refreshToken } from './entity/refreshToken.entity';
+import { gender } from '../user/enum/gender.enum';
+import { ProviderEnum } from '../user/enum/provider.enum';
 
 @Injectable()
 export class AuthService {
@@ -22,11 +24,11 @@ export class AuthService {
         private readonly refreshTokenRepository: Repository<refreshToken>,
         private readonly mailerService: MailerService,
         private readonly jwtService: JwtService
-    ) {}
+    ) { }
 
     async validateToken(refreshToken: string) {
         const existingToken = await this.refreshTokenRepository.findOneBy({ refreshToken });
-        
+
         if (!existingToken) throw new UnauthorizedException('토큰을 찾을 수 없습니다.');
 
         if (Date.now() > existingToken.expiresAt.getTime()) {
@@ -38,7 +40,7 @@ export class AuthService {
     async sendCode(dto: SendVerifyCodeDTO) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
-        
+
         const verifyCode = this.verifyCodeRepository.create({ email: dto.email, code, expiresAt });
 
         await this.mailerService.sendMail({
@@ -99,5 +101,48 @@ export class AuthService {
 
     async logout(refreshToken: string) {
         await this.refreshTokenRepository.delete({ refreshToken });
+    }
+
+    async kakaoOauthSignIn(clientId: string, profileNickname: string) {
+        if (await this.userRepository.existsBy({ email: clientId })) {
+            const user = await this.userRepository.findOne({
+                where: { email: clientId },
+                select: ['idx', 'password', 'username']
+            });
+            if (!user) throw new BadRequestException("존재하지 않는 계정입니다.");
+
+            const payload = { sub: user.idx };
+            const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
+
+            const accessToken = await this.jwtService.signAsync(payload);
+            const refreshToken = await this.jwtService.signAsync(payload, {
+                expiresIn: '14d'
+            });
+            const username = user.username;
+
+            await this.refreshTokenRepository.save({ refreshToken, expiresAt });
+
+            return { accessToken, refreshToken, username };
+        } else {
+            // 존재하지 않는 경우
+            const user = await this.userRepository.create({
+                birth: new Date('2000-01-01T00:00:00Z'),// Temp
+                email: clientId,
+                gender: gender.male,    // Temp
+                provider: ProviderEnum.KAKAO,
+                username: profileNickname
+            })
+            const payload = { sub: user.idx };
+            const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
+
+            const accessToken = await this.jwtService.signAsync(payload);
+            const refreshToken = await this.jwtService.signAsync(payload, {
+                expiresIn: '14d'
+            });
+
+            await this.refreshTokenRepository.save({ refreshToken, expiresAt });
+
+            return { accessToken, refreshToken, username: user.username };
+        }
     }
 }
