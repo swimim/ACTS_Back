@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { user } from './entity/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -15,6 +15,7 @@ export class UserService {
         private readonly verifyCodeRepository: Repository<verify_code>
     ) {}
 
+    // 회원가입
     async signup(dto: SignupDTO) {
         const existId = await this.userRepository.findOne({ where: { username: dto.username }});
         const existEmail = await this.userRepository.findOne({ where: { email: dto.email }});
@@ -41,5 +42,27 @@ export class UserService {
 
         await this.verifyCodeRepository.remove(isVerifiedEmail);
         await this.userRepository.save(user);
+    }
+
+    async getUserInfo(userIdx: number) {
+        const user = await this.userRepository.findOne({ where: { idx: userIdx }});
+        if (!user) throw new NotFoundException('사용자를 찾을 수 없습니다.');
+
+        const birth = user.birth;
+        const now = new Date();
+
+        const hasPassed = now.getMonth() < birth.getMonth() || (now.getMonth() === birth.getMonth() && now.getDate() < birth.getDate());
+
+        const age = (now.getFullYear() - birth.getFullYear()) + (hasPassed ? -1 : 0);
+
+        const userInfo = {
+            username: user.username,
+            email: user.email,
+            gender: user.gender,
+            birth,
+            age
+        };
+
+        return userInfo;
     }
 }
