@@ -1,0 +1,73 @@
+name: Deploy to cloudtype
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Connect deploy key
+        uses: cloudtype-github-actions/connect@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          ghtoken: ${{ secrets.GHP_TOKEN }}
+      - name: Deploy
+        uses: cloudtype-github-actions/deploy@v1
+        with:
+          token: ${{ secrets.CLOUDTYPE_TOKEN }}
+          project: acorn497/nexus
+          stage: main
+          yaml: >
+            name: acts-back
+
+            app: node@24
+
+            options:
+              env:
+                - name: DB_HOST
+                  value: gbsw-cs-oasis-lhw080917-bd4f.c.aivencloud.com
+                - name: DB_PORT
+                  value: "22968"
+                - name: DB_USERNAME
+                  value: avnadmin
+                - name: DB_PASSWORD
+                  value: AVNS_ndI00EINeLalDu0D9C8
+                - name: MAIL_USER
+                  value: actsactsmail@gmail.com
+                - name: MAIL_PASS
+                  value: jocckxagpbnermvt
+                - name: TOKEN_SECRET
+                  value: aklsdkjlfjklasdflkjaskdljf
+                - name: DB_DATABASE
+                  value: acts
+                - name: GOOGLE_CLIENT_ID
+                  value: 931412294831-hk9mjpefuln4ggf88irii94lgv5coaiq.apps.googleusercontent.com
+                - name: GOOGLE_CLIENT_SECRET
+                  value: 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
+                - name: GOOGLE_CALLBACK_URL
+                  value: https://port-0-acts-back-mh1rgv1nf41d34bb.sel3.cloudtype.app/auth/oauth/google/callback
+                - name: KAKAO_CLIENT_ID
+                  value: 520cc900fbce33d511dbf7b72ddf7364
+                - name: KAKAO_CLIENT_SECRET
+                  value: 6mzZfHpQpJZVd4jRtvrPKt9pCpuoKMLU
+                - name: KAKAO_CALLBACK_URL
+                  value: https://port-0-acts-back-mh1rgv1nf41d34bb.sel3.cloudtype.app/auth/oauth/kakao/callback
+                - name: NAVER_CLIENT_ID
+                  value: Vo_DPNZnsjlHo3Z5YxX6
+                - name: NAVER_CLIENT_PW
+                  value: 5XSFKAe5_h
+                - name: NAVER_CALLBACK
+                  value: https://port-0-acts-back-mh1rgv1nf41d34bb.sel3.cloudtype.app/auth/oauth/naver/callback
+                - name: FRONTEND_URL
+                  value: http://localhost:3000
+              buildenv: []
+              ports: "3000"
+              build: npm run build
+              start: npm start
+            context:
+              git:
+                url: git@github.com:${{ github.repository }}.git
+                ref: ${{ github.ref }}
