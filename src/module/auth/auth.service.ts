@@ -27,17 +27,27 @@ export class AuthService {
         private readonly jwtService: JwtService
     ) { }
 
+    // 토큰 검증
     async validateToken(refreshToken: string) {
         const existingToken = await this.refreshTokenRepository.findOneBy({ refreshToken });
 
-        if (!existingToken) throw new UnauthorizedException('토큰을 찾을 수 없습니다.');
+        if (!existingToken) throw new UnauthorizedException({
+            message: '토큰을 찾을 수 없습니다.',
+            status: false,
+            statusCode: 100
+        });
 
         if (Date.now() > existingToken.expiresAt.getTime()) {
             await this.refreshTokenRepository.delete(existingToken);
-            throw new UnauthorizedException('토큰이 만료되었습니다.');
+            throw new UnauthorizedException({
+                message: '토큰이 만료되었습니다.',
+                status: false,
+                statusCode: 101
+            });
         }
     }
 
+    // 인증 코드 발송
     async sendCode(dto: SendVerifyCodeDTO) {
         const code = Math.floor(100000 + Math.random() * 900000).toString();
         const expiresAt = new Date(Date.now() + 1000 * 60 * 5);
@@ -53,18 +63,35 @@ export class AuthService {
         await this.verifyCodeRepository.upsert(verifyCode, ['email']);
     }
 
+    // 이메일 인증
     async verifyCode(dto: VerifyCodeDTO) {
         const existingCode = await this.verifyCodeRepository.findOne({ where: { email: dto.email } });
 
-        if (!existingCode) throw new BadRequestException("인증코드를 먼저 발송해주세요.");
-        if (existingCode.isVerified) throw new BadRequestException("이미 인증되었습니다.");
+        if (!existingCode) throw new BadRequestException({
+            message: '인증코드를 먼저 발송해주세요.',
+            status: false,
+            statusCode: 100
+        });
+        if (existingCode.isVerified) throw new BadRequestException({
+            message: '이미 인증되었습니다.',
+            status: false,
+            statusCode: 101
+        });
 
         if (Date.now() > existingCode.expiresAt.getTime()) {
-            throw new BadRequestException("인증 시간이 만료되었습니다.");
+            throw new BadRequestException({
+                message: '인증 시간이 만료되었습니다.',
+                status: false,
+                statusCode: 102
+            });
         }
 
         if (existingCode.code != dto.code) {
-            throw new BadRequestException("인증코드가 일치하지 않습니다.");
+            throw new BadRequestException({
+                message: '인증코드가 일치하지 않습니다.',
+                status: false,
+                statusCode: 103
+            });
         }
 
         await this.verifyCodeRepository.update(existingCode, {
@@ -72,15 +99,16 @@ export class AuthService {
         });
     }
 
+    // 자체 로그인
     async signin(dto: SigninDTO) {
         const user = await this.userRepository.findOne({
             where: { email: dto.email },
             select: ['idx', 'password', 'username']
         });
-        if (!user) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
+        if (!user) throw new BadRequestException({ message: '이메일 또는 비밀번호가 일치하지 않습니다.', statusCode: 102 });
 
         const isMatch = await bcrypt.compare(dto.password, user.password!);
-        if (!isMatch) throw new BadRequestException("아이디 또는 비밀번호가 일치하지 않습니다.");
+        if (!isMatch) throw new BadRequestException({ message: '이메일 또는 비밀번호가 일치하지 않습니다.', statusCode: 103 });
 
         const payload = { sub: user.idx };
         const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
@@ -96,10 +124,12 @@ export class AuthService {
         return { accessToken, refreshToken, username };
     }
 
+    // AccessToken 재발급
     async refreshAccessToken(userId: number) {
         return await this.jwtService.signAsync({ sub: userId });
     }
 
+    // 로그아웃
     async logout(refreshToken: string) {
         await this.refreshTokenRepository.delete({ refreshToken });
     }
