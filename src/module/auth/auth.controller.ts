@@ -9,6 +9,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { ProviderEnum } from '../user/enum/provider.enum';
 import { naver } from './guard/naver-auth.guard';
 import { ConfigService } from '@nestjs/config';
+import type { Response } from 'express';
 
 @Controller('auth')
 export class AuthController {
@@ -43,8 +44,11 @@ export class AuthController {
 
     @Post('/signin')
     @HttpCode(200)
-    async signin(@Body() dto: SigninDTO) {
-        const result = await this.authService.signin(dto);
+    async signin(
+        @Body() dto: SigninDTO,
+        @Res({ passthrough: true }) res: Response
+    ) {
+        const result = await this.authService.signin(dto, res);
 
         return {
             message: '로그인 성공',

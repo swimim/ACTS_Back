@@ -13,6 +13,7 @@ import { refreshToken } from './entity/refreshToken.entity';
 import { ProviderEnum } from '../user/enum/provider.enum';
 import { GenderEnum } from '../user/enum/gender.enum';
 import { SocialSignupDto } from './dto/socialSignup.dto';
+import type { Response } from 'express';
 
 @Injectable()
 export class AuthService {
@@ -100,7 +101,7 @@ export class AuthService {
     }
 
     // 자체 로그인
-    async signin(dto: SigninDTO) {
+    async signin(dto: SigninDTO, res: Response) {
         const user = await this.userRepository.findOne({
             where: { email: dto.email },
             select: ['idx', 'password', 'username']
@@ -118,6 +119,14 @@ export class AuthService {
             expiresIn: '14d'
         });
         const username = user.username;
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            // secure: true, // https
+            sameSite: 'strict',
+            path: '/auth/refresh',
+            expires: expiresAt,
+        });
 
         await this.refreshTokenRepository.save({ refreshToken, expiresAt });
 
