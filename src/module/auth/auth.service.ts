@@ -123,7 +123,7 @@ export class AuthService {
         res.cookie('refreshToken', refreshToken, {
             httpOnly: true,
             // secure: true, // https
-            sameSite: 'strict',
+            sameSite: 'none',
             path: '/auth/refresh',
             expires: expiresAt,
         });
