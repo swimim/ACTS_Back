@@ -9,6 +9,7 @@ import { UserModule } from './module/user/user.module';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
+import { ChatModule } from './module/chat/chat.module';
 
 @Module({
   imports: [
@@ -20,7 +21,7 @@ import { typeOrmConfig } from './config/typeorm.config';
       inject: [ConfigService],
       useFactory: typeOrmConfig
     }),
-    AuthModule, GameModule, ReportModule, SurveyModule, UserModule],
+    AuthModule, GameModule, ReportModule, SurveyModule, UserModule, ChatModule],
   controllers: [AppController],
   providers: [AppService],
 })
