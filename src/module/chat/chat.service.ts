@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import OpenAI from 'openai';
@@ -6,6 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { Chat } from './entity/chat.entity';
 import { ChatMessage, MessageRole } from './entity/chatMessage.entity';
 import { Response } from 'express';
+import { InternalServerError } from 'openai';
 
 @Injectable()
 export class ChatService {
@@ -36,7 +37,7 @@ export class ChatService {
     });
 
     if (!chat) {
-      throw new NotFoundException('채팅을 찾지 못했습니다.');
+      throw new NotFoundException('채팅을 찾지 못 했습니다.');
     }
 
     return await this.chatMessageRepository.find({
@@ -71,7 +72,7 @@ export class ChatService {
       });
 
       if (!foundChat) {
-        throw new Error('채팅을 찾지 못했습니다.');
+        throw new Error('채팅을 찾지 못 했습니다.');
       }
       chat = foundChat;
     }
@@ -128,6 +129,25 @@ export class ChatService {
     } catch (error) {
       res.write(`data: ${JSON.stringify({ type: 'error', message: error.message })}\n\n`);
       res.end();
+    }
+  }
+
+  async updateChatTitle(userIdx: number, chatIdx: number, title: string) {
+    const chat = await this.chatRepository.findOne({
+      where: { idx: chatIdx, userIdx },
+    });
+
+    if (!chat) {
+      throw new NotFoundException('채팅을 찾지 못 했습니다.');
+    }
+
+    chat.title = title;
+    
+    try {
+      await this.chatRepository.save(chat);
+    } catch (error) {
+      console.log(error);
+      throw new InternalServerErrorException();
     }
   }
 }

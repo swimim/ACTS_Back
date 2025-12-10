@@ -1,9 +1,10 @@
 import { GetUser } from "src/common/decorators/getUser.decorator";
 import { JwtAccessGuard } from "../auth/guard/jwt-access.guard";
-import { Body, Controller, Get, Param, ParseIntPipe, Post, Res, UseGuards } from "@nestjs/common";
+import { Body, Controller, Get, Param, ParseIntPipe, Patch, Post, Res, UseGuards } from "@nestjs/common";
 import { ChatService } from "./chat.service";
 import { SendMessageDto } from "./dto/send-message.dto";
 import type { Response } from "express";
+import { UpdateChatTitleDto } from "./dto/update-chat-title.dto";
 
 @Controller('chat')
 export class ChatController {
@@ -34,5 +35,16 @@ export class ChatController {
       body.title,
       res
     );
+  }
+
+  @Patch('/:chatIdx')
+  @UseGuards(JwtAccessGuard)
+  async updateChatTitle(
+    @GetUser() user,
+    @Param('chatIdx', ParseIntPipe) chatIdx: number,
+    @Body() body: UpdateChatTitleDto
+  ) {
+    const userIdx = user.userIdx;
+    return await this.chatService.updateChatTitle(userIdx, chatIdx, body.title);
   }
 }
