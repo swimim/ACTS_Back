@@ -1,12 +1,11 @@
-import { Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { IsNull, Repository } from 'typeorm';
 import OpenAI from 'openai';
 import { ConfigService } from '@nestjs/config';
 import { Chat } from './entity/chat.entity';
 import { ChatMessage, MessageRole } from './entity/chatMessage.entity';
 import { Response } from 'express';
-import { InternalServerError } from 'openai';
 
 @Injectable()
 export class ChatService {
@@ -26,18 +25,21 @@ export class ChatService {
 
   async getChatList(userIdx: number): Promise<Chat[]> {
     return await this.chatRepository.find({
-      where: { userIdx },
+      where: { userIdx, isDeleted: IsNull() },
       order: { updatedAt: 'DESC' },
     });
   }
 
   async getChatHistory(chatIdx: number, userIdx: number): Promise<ChatMessage[]> {
     const chat = await this.chatRepository.findOne({
-      where: { idx: chatIdx, userIdx },
+      where: {
+        idx: chatIdx, userIdx,
+        isDeleted: IsNull()
+      },
     });
 
     if (!chat) {
-      throw new NotFoundException('채팅을 찾지 못 했습니다.');
+      throw new NotFoundException('채팅을 찾지 못했습니다.');
     }
 
     return await this.chatMessageRepository.find({
@@ -68,12 +70,19 @@ export class ChatService {
       chatIdx = chat.idx;
     } else {
       const foundChat = await this.chatRepository.findOne({
-        where: { idx: chatIdx, userIdx },
+        where: {
+          idx: chatIdx, userIdx,
+          isDeleted: IsNull()
+        },
       });
 
       if (!foundChat) {
-        throw new Error('채팅을 찾지 못 했습니다.');
+        throw new NotFoundException('채팅을 찾지 못했습니다.');
       }
+
+      foundChat.updatedAt = new Date();
+      await this.chatRepository.save(foundChat);
+
       chat = foundChat;
     }
 
@@ -82,6 +91,7 @@ export class ChatService {
       role: MessageRole.USER,
       content: message,
     });
+
     await this.chatMessageRepository.save(userMessage);
 
     const history = await this.chatMessageRepository.find({
@@ -138,16 +148,39 @@ export class ChatService {
     });
 
     if (!chat) {
-      throw new NotFoundException('채팅을 찾지 못 했습니다.');
+      throw new NotFoundException('채팅을 찾지 못했습니다.');
     }
 
     chat.title = title;
-    
+
     try {
       await this.chatRepository.save(chat);
     } catch (error) {
       console.log(error);
-      throw new InternalServerErrorException();
+      throw new InternalServerErrorException(error);
     }
+  }
+
+  async deleteChat(userIdx: number, chatIdx: number) {
+    const chat = await this.chatRepository.findOne({
+      where: {
+        idx: chatIdx,
+        userIdx: userIdx,
+        isDeleted: IsNull()
+      },
+    });
+
+    if (!chat) {
+      throw new NotFoundException('채팅을 찾지 못했습니다.');
+    }
+
+    chat.isDeleted = new Date;
+
+    await this.chatRepository.save(chat);
+
+    return await this.chatRepository.find({
+      where: { userIdx, isDeleted: IsNull() },
+      order: { updatedAt: 'DESC' },
+    });
   }
 }

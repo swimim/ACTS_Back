@@ -11,4 +11,10 @@ export const typeOrmConfig = (configService: ConfigService): TypeOrmModuleOption
     entities: [__dirname + '/../**/*.entity.{js,ts}'],
     driver: require('mysql2'),
     synchronize: true,
+    extra: {
+        connectionLimit: 10,
+        timezone: '+09:00',
+    },
+    connectorPackage: 'mysql2',
+    poolSize: 10,
 });
