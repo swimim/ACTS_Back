@@ -25,12 +25,12 @@ import { NaverStrategy } from './strategy/naver-auth.strategy';
             port: 587,
             secure: false,
             auth: {
-              user: configService.get('MAIL_USER'),
-              pass: configService.get('MAIL_PASS'),
+              user: configService.getOrThrow('MAIL_USER'),
+              pass: configService.getOrThrow('MAIL_PASS'),
             },
           },
           defaults: {
-            from: `"ACTS" <${configService.get('MAIL_USER')}>`,
+            from: `"ACTS" <${configService.getOrThrow('MAIL_USER')}>`,
           },
         }),
         inject: [ConfigService]
@@ -38,7 +38,7 @@ import { NaverStrategy } from './strategy/naver-auth.strategy';
       JwtModule.registerAsync({
         global: true,
         useFactory: async (configService: ConfigService) => ({
-          secret: configService.get('TOKEN_SECRET'),
+          secret: configService.getOrThrow('TOKEN_SECRET'),
           signOptions: { expiresIn: '5m' },
         }),
         inject: [ConfigService]

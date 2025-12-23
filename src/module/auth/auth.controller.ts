@@ -102,7 +102,7 @@ export class AuthController {
             ProviderEnum.KAKAO
         );
 
-        return res.redirect(`${this.configService.get('FRONTEND_URL') ?? 'localhost:5173'}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+        return res.redirect(`${this.configService.getOrThrow('FRONTEND_URL')}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }
 
     @Get('/oauth/google')
@@ -121,7 +121,7 @@ export class AuthController {
             req.user.birth
         )
 
-        return res.redirect(`${this.configService.get('FRONTEND_URL') ?? 'localhost:5173'}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+        return res.redirect(`${this.configService.getOrThrow('FRONTEND_URL')}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }
 
     @Get('/oauth/naver')
@@ -139,6 +139,6 @@ export class AuthController {
             req.user.birth
         )
 
-        return res.redirect(`${this.configService.get('FRONTEND_URL') ?? 'localhost:5173'}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
+        return res.redirect(`${this.configService.getOrThrow('FRONTEND_URL')}/auth/success?accesstoken=${result.accessToken}&refreshtoken=${result.refreshToken}&username=${result.username}`);
     }
 }

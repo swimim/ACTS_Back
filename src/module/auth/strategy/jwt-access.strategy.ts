@@ -8,7 +8,7 @@ export class JwtAccessStrategy extends PassportStrategy(Strategy, 'jwt-access') 
   constructor(
     private readonly configService: ConfigService
   ) {
-    const secret = configService.get<string>('TOKEN_SECRET');
+    const secret = configService.getOrThrow<string>('TOKEN_SECRET');
     if (!secret) {
       throw new Error('TOKEN_SECRET is undefined.');
     }
