@@ -21,7 +21,13 @@ import { ChatModule } from './module/chat/chat.module';
       inject: [ConfigService],
       useFactory: typeOrmConfig
     }),
-    AuthModule, GameModule, ReportModule, SurveyModule, UserModule, ChatModule],
+    AuthModule,
+    GameModule,
+    ReportModule,
+    SurveyModule,
+    UserModule,
+    ChatModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

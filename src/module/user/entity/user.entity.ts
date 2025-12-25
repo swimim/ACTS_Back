@@ -1,6 +1,7 @@
-import { Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Column, Entity, ManyToMany, OneToMany, PrimaryGeneratedColumn } from "typeorm";
 import { ProviderEnum } from "../enum/provider.enum";
 import { GenderEnum } from "../enum/gender.enum";
+import { report } from "src/module/report/entity/report.entity";
 
 @Entity()
 export class user {
@@ -24,4 +25,7 @@ export class user {
 
   @Column({ nullable: false, default: ProviderEnum.NATIVE })
   provider: ProviderEnum;
+
+  @OneToMany(() => report, report => report.user)
+  reports: report[]
 }
