@@ -20,6 +20,9 @@ export class Chat {
   @OneToMany(() => ChatMessage, (message) => message.chat)
   messages: ChatMessage[];
 
+  @Column({ nullable: true, default: null })
+  isDeleted: Date;
+
   @CreateDateColumn()
   createdAt: Date;
 

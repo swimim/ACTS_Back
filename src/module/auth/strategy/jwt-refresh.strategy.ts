@@ -11,7 +11,7 @@ export class JwtRefreshStretagy extends PassportStrategy(Strategy, 'jwt-refresh'
     private readonly configService: ConfigService,
     private readonly authService: AuthService
   ) {
-    const secret = configService.get<string>('TOKEN_SECRET');
+    const secret = configService.getOrThrow<string>('TOKEN_SECRET');
     if (!secret) {
       throw new InternalServerErrorException('TOKEN_SECRET is undefined.');
     }
