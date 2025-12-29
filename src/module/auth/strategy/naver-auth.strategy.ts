@@ -32,17 +32,13 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
     const parsedGender: GenderEnum = gender === 'M' ? GenderEnum.male : GenderEnum.female;
     const birth = new Date(`${birthYear}-${birthday}`);
     
-    const existUser = await this.authService.validateUser(id);
-
-    if (!existUser) {
-      await this.authService.socialSignup({
-        username: name,
-        email: id,
-        gender: parsedGender,
-        birth,
-        provider: ProviderEnum.NAVER
-      });
-    }
+    await this.authService.socialSignup({
+      username: name,
+      email: id,
+      gender: parsedGender,
+      birth,
+      provider: ProviderEnum.NAVER
+    });
 
     const user: NaverPayload = { nid: id, name };
 

@@ -190,12 +190,6 @@ export class AuthService {
         }
     }
 
-    async validateUser(email: string) {
-        const user = await this.userRepository.findOne({ where: { email }});
-
-        return user;
-    }
-
     async socialSignup(dto: SocialSignupDto) {
         await this.userRepository.save({
             username: dto.username,
