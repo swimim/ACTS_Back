@@ -6,7 +6,6 @@ import { AuthService } from "../auth.service";
 import { ConfigService } from "@nestjs/config";
 import { GenderEnum } from "src/module/user/enum/gender.enum";
 import { ProviderEnum } from "src/module/user/enum/provider.enum";
-import { NaverPayload } from "../interfaces/naver-auth.interface";
 
 @Injectable()
 export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
@@ -31,16 +30,14 @@ export class NaverStrategy extends PassportStrategy(Strategy, 'naver') {
 
     const parsedGender: GenderEnum = gender === 'M' ? GenderEnum.male : GenderEnum.female;
     const birth = new Date(`${birthYear}-${birthday}`);
-    
-    await this.authService.socialSignup({
+
+    const user = {
       username: name,
       email: id,
       gender: parsedGender,
       birth,
       provider: ProviderEnum.NAVER
-    });
-
-    const user: NaverPayload = { nid: id, name };
+    };
 
     done(null, user)
 
