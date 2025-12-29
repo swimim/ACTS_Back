@@ -189,14 +189,4 @@ export class AuthService {
             return { accessToken, refreshToken, username: user.username };
         }
     }
-
-    async socialSignup(dto: SocialSignupDto) {
-        await this.userRepository.save({
-            username: dto.username,
-            password: null,
-            email: dto.email,
-            gender: dto.gender,
-            birth: dto.birth
-        });
-    }
 }
