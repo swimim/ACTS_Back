@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { report } from "./entity/report.entity";
-import { Repository } from "typeorm";
+import { DataSource, QueryFailedError, Repository } from "typeorm";
 import { catScore } from "./entity/cat-score.entity";
 import { SaveReportDto } from "./dto/save-report.dto";
 
@@ -10,38 +10,67 @@ export class ReportService {
   constructor(
     @InjectRepository(report)
     private readonly reportRepository: Repository<report>,
-    @InjectRepository(catScore)
-    private readonly catScoreRepository: Repository<catScore>
+    private readonly dataSource: DataSource
   ) {}
   
   public async saveReport(
     body: SaveReportDto,
     userIdx: number
   ) {
-    const existReport = await this.reportRepository.findOne({
-      where: {
+    try {
+      return await this.saveReportInTransaction(body, userIdx);
+    } catch (error) {
+      if (!this.isDuplicateReportError(error)) {
+        throw error;
+      }
+
+      return await this.saveReportInTransaction(body, userIdx);
+    }
+  }
+
+  private async saveReportInTransaction(
+    body: SaveReportDto,
+    userIdx: number
+  ) {
+    await this.dataSource.transaction(async (manager) => {
+      const reportRepository = manager.getRepository(report);
+      const catScoreRepository = manager.getRepository(catScore);
+
+      const existReport = await reportRepository.findOne({
+        where: {
+          user: { idx: userIdx },
+          day_of_week: body.day_of_week
+        },
+        relations: ['cat_score']
+      });
+
+      const savedCatScore = await catScoreRepository.save({
+        ...(existReport?.cat_score && { idx: existReport.cat_score.idx }),
+        ...body.cat_scores_100
+      });
+
+      await reportRepository.save({
+        ...(existReport && { idx: existReport.idx }),
+        day_of_week: body.day_of_week,
+        p_final: body.p_final,
+        label_final: body.label_final,
+        cat_score: savedCatScore,
         user: { idx: userIdx },
-        day_of_week: body.day_of_week
-      },
-      relations: ['cat_score']
-    });
-
-    const savedCatScore = await this.catScoreRepository.save({
-      ...(existReport?.cat_score && { idx: existReport.cat_score.idx }),
-      ...body.cat_scores_100
-    });
-
-    await this.reportRepository.save({
-      ...(existReport && { idx: existReport.idx }),
-      day_of_week: body.day_of_week,
-      p_final: body.p_final,
-      label_final: body.label_final,
-      cat_score: savedCatScore,
-      user: { idx: userIdx },
-      reported_at: new Date()
+        reported_at: new Date()
+      });
     });
 
     return await this.getReport(body.day_of_week, userIdx);
+  }
+
+  private isDuplicateReportError(error: unknown) {
+    if (!(error instanceof QueryFailedError)) {
+      return false;
+    }
+
+    const driverError = error.driverError as { code?: string; errno?: number };
+
+    return driverError.code === 'ER_DUP_ENTRY' || driverError.errno === 1062;
   }
 
   public async getReports(
